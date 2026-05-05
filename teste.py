@@ -26,7 +26,7 @@ inserir_analise(
     erro=None,
     explicacao="Código correto",
     codigo_corrigido="print('hello world')",
-    nivel="baixo"
+    nivel_severidade="baixo"
 )
 
 # =========================
