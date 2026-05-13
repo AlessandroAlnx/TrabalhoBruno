@@ -1,37 +1,42 @@
-from app import criar_usuario, login, inserir_codigo, inserir_analise, registrar_log
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
+import os
 
-# =========================
-# CRIA USUÁRIO
-# =========================
-user_id = criar_usuario("João", "joao@email.com", "1234")
-print("User ID:", user_id)
+# Carrega variaveis do .env
+load_dotenv()
 
-# =========================
-# LOGIN (teste)
-# =========================
-logado = login("joao@email.com", "1234")
-print("Login OK:", logado)
+# Captura chave da API
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY nao encontrada. Configure no arquivo .env")
 
-# =========================
-# INSERE CÓDIGO
-# =========================
-codigo_id = inserir_codigo(user_id, "print('hello world')")
-print("Codigo ID:", codigo_id)
-
-# =========================
-# INSERE ANÁLISE
-# =========================
-inserir_analise(
-    codigo_id,
-    erro=None,
-    explicacao="Código correto",
-    codigo_corrigido="print('hello world')",
-    nivel_severidade="baixo"
+# Configuracao do modelo Gemini
+llm = ChatGoogleGenerativeAI(
+    model="gemini-flash-latest",
+    google_api_key=api_key,
+    temperature=0.7,
 )
 
-# =========================
-# LOG DO SISTEMA
-# =========================
-registrar_log(user_id, "INSERT", "Inseriu código e análise")
+# Criacao do prompt
+prompt = ChatPromptTemplate.from_template(
+    """
+    Voce e um especialista em tecnologia.
 
-print("Tudo executado com sucesso!")
+    Responda a seguinte pergunta:
+    {pergunta}
+    """
+)
+
+# Criacao da chain
+chain = prompt | llm
+
+# Entrada do usuario
+pergunta_usuario = input("Digite sua pergunta: ")
+
+# Execucao
+resposta = chain.invoke({"pergunta": pergunta_usuario})
+
+# Saida
+print("\nResposta da IA:\n")
+print(resposta.content)
